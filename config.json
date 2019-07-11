@@ -1,0 +1,12 @@
+{
+	"bellbox": "circuitco.de",
+	"default": {
+		"target": "me"
+	},
+	"convert": [
+		{
+			"path": "/prometheus/",
+			"ruleset": "prometheus"
+		}
+	]
+}
