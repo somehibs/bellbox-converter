@@ -58,6 +58,6 @@ func (p Prometheus) Handle(input []byte) bellbox.Message {
 		msg.Title += fmt.Sprintf("%d services OK. ", pass)
 	}
 	msg.Message = fullSummary
-	fmt.Printf("e: %s a: %+v\n", err, j)
+	//fmt.Printf("e: %s a: %+v\n", err, j)
 	return msg
 }

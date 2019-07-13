@@ -1,0 +1,18 @@
+[Unit]
+Description=Bellbox converter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+StandardOutput=syslog+console
+WorkingDirectory=/home/shroud/go/src/git.circuitco.de/self/bellbox-converter
+ExecStart=/home/shroud/go/src/git.circuitco.de/self/bellbox-converter/converter
+Type=simple
+User=shroud
+Group=shroud
+Restart=always
+RestartSec=5
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
