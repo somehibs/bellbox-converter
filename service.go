@@ -1,16 +1,14 @@
 package converter
 
 import (
-	"os"
+	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 	"io/ioutil"
-	"path/filepath"
-	"encoding/json"
+	"os"
 
-	"github.com/gin-gonic/gin"
 	"git.circuitco.de/self/bellbox"
+	"github.com/gin-gonic/gin"
 )
 
 func New() error {
@@ -19,25 +17,31 @@ func New() error {
 	if err != nil {
 		return err
 	}
-	translations, err := LoadTranslations()
-	if err != nil {
-		return err
-	}
+	translations := LoadTranslations()
 	router := gin.Default()
 	return Route(router, config, translations)
 }
 
 type ConvertRoute struct {
-	rule ConvertRule
-	ruleset TranslationFile
-	sender bellbox.SenderAuth
+	rule    ConvertRule
+	ruleset Translation
+	sender  bellbox.SenderAuth
 }
 
 func (cr *ConvertRoute) Handle(c *gin.Context) {
+	b, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(500, gin.H{})
+	}
+	msg := cr.ruleset.Handle(b)
+	if msg.Title != "" {
+		cr.sender.Send(cr.rule.Target, msg.Title, msg.Message)
+	}
+	fmt.Printf("Integration returned: %+v\n", msg)
 	c.JSON(200, gin.H{})
 }
 
-func Route(router *gin.Engine, config TranslationConfig, tlrules map[string]TranslationFile) error {
+func Route(router *gin.Engine, config TranslationConfig, tlrules map[string]Translation) error {
 	//d := config.Default
 	for _, conversion := range config.Convert {
 		if tlrules[conversion.Ruleset] == nil {
@@ -45,7 +49,20 @@ func Route(router *gin.Engine, config TranslationConfig, tlrules map[string]Tran
 			panic("")
 			continue
 		}
+		if conversion.SenderName == "" {
+			conversion.SenderName = conversion.Ruleset
+		}
 		sender := bellbox.StartSender(conversion.SenderName, config.Bellbox)
+		if conversion.Target == "" {
+			conversion.Target = config.Default.Target
+		}
+		if conversion.Target == "" {
+			panic("")
+		}
+		_, err := sender.SingleTarget(conversion.Target)
+		if err != nil {
+			panic(err.Error())
+		}
 		convertRoute := ConvertRoute{conversion, tlrules[conversion.Ruleset], sender}
 		if conversion.SenderName == "" {
 			conversion.SenderName = conversion.Ruleset
@@ -60,30 +77,10 @@ func LoadConfig() (TranslationConfig, error) {
 	return config, LoadJson("config.json", &config)
 }
 
-func LoadTranslations() (map[string]TranslationFile, error) {
-	ret := map[string]TranslationFile{}
-	err := filepath.Walk("translations/", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() && path != "translations/" {
-			// don't descend into directories
-			fmt.Println("Skipping unknown dir: " + path)
-			return filepath.SkipDir
-		}
-		if !info.IsDir() && strings.Contains(path, ".json") {
-			tf := TranslationFile{}
-			err = LoadJson(path, &tf)
-			if err != nil {
-				return err
-			}
-			simpleName := strings.Replace(info.Name(), ".json", "", 1)
-			//fmt.Printf("File: %s dat: %+v\n", simpleName, tf)
-			ret[simpleName] = tf
-		}
-		return nil
-	})
-	return ret, err
+func LoadTranslations() map[string]Translation {
+	ret := map[string]Translation{}
+	ret["prometheus"] = Prometheus{}
+	return ret
 }
 
 func LoadJson(file string, item interface{}) error {

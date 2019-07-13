@@ -1,5 +1,5 @@
 {
-	"bellbox": "circuitco.de",
+	"bellbox": "http://circuitco.de:5384",
 	"default": {
 		"target": "me"
 	},

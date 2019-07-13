@@ -1,20 +1,17 @@
 package converter
 
-// Translation rules with key checks win when picking one
-type TranslationRule struct {
-	Name string
-	KeyExists []string
-	Encoding string
-	Map map[string]string
-	Format map[string]string
+import (
+	"git.circuitco.de/self/bellbox"
+)
+
+type Translation interface {
+	Handle(input []byte) bellbox.Message
 }
 
-type TranslationFile []TranslationRule
-
 type ConvertRule struct {
-	Target string
-	Path string
-	Ruleset string
+	Target     string
+	Path       string
+	Ruleset    string
 	SenderName string
 }
 
