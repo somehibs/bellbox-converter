@@ -17,6 +17,7 @@ type ConvertRule struct {
 
 type TranslationConfig struct {
 	Bellbox string
+	Listen  string `json:"listen,optiempty"`
 	Default ConvertRule
 	Convert []ConvertRule
 }

@@ -1,5 +1,6 @@
 {
 	"bellbox": "http://circuitco.de:5384",
+	"listen": "0.0.0.0:9009",
 	"default": {
 		"target": "me"
 	},
@@ -7,6 +8,10 @@
 		{
 			"path": "/prometheus/",
 			"ruleset": "prometheus"
+		},
+		{
+			"path": "/hass/",
+			"ruleset": "homeassistant"
 		}
 	]
 }

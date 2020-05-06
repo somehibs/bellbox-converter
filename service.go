@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"git.circuitco.de/self/bellbox"
+	"git.circuitco.de/self/bellbox/sender"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,9 +35,9 @@ func (cr *ConvertRoute) Handle(c *gin.Context) {
 	}
 	msg := cr.ruleset.Handle(b)
 	if msg.Title != "" {
-		cr.sender.Send(cr.rule.Target, msg.Title, msg.Message)
+		cr.sender.Send(cr.rule.Target, msg.Title, msg.Message, "http://circuitco.de:9000/alerts")
 	}
-	fmt.Printf("Integration returned: %+v\n", msg)
+	//fmt.Printf("Integration returned: %+v\n", msg)
 	c.JSON(200, gin.H{})
 }
 
@@ -69,7 +69,10 @@ func Route(router *gin.Engine, config TranslationConfig, tlrules map[string]Tran
 		}
 		router.POST(conversion.Path, convertRoute.Handle)
 	}
-	return router.Run("localhost:9009")
+	if config.Listen == "" {
+		config.Listen = "localhost:9009"
+	}
+	return router.Run(config.Listen)
 }
 
 func LoadConfig() (TranslationConfig, error) {
@@ -80,6 +83,7 @@ func LoadConfig() (TranslationConfig, error) {
 func LoadTranslations() map[string]Translation {
 	ret := map[string]Translation{}
 	ret["prometheus"] = Prometheus{}
+	ret["homeassistant"] = HomeAssistant{}
 	return ret
 }
 

@@ -49,7 +49,7 @@ func (p Prometheus) Handle(input []byte) bellbox.Message {
 		} else {
 			pass += 1
 		}
-		fullSummary += fmt.Sprintf(summaryFmt, alert.Labels["name"], alert.Status, alert.Labels["summary"])
+		fullSummary += fmt.Sprintf(summaryFmt, alert.Labels["alertname"], alert.Status, alert.Annotations["summary"])
 	}
 	if fail > 0 {
 		msg.Title = fmt.Sprintf("%d services failing. ", fail)
